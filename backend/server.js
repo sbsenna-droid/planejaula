@@ -9,14 +9,36 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Middleware CORS - Aceita requisições de qualquer origem em desenvolvimento
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.FRONTEND_URL || '*'
-  ],
-  credentials: true
+  origin: function(origin, callback) {
+    // Permitir requisições sem origin (como mobile apps ou curl)
+    if (!origin) return callback(null, true);
+    
+    // Lista de origens permitidas
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5174',
+      'http://127.0.0.1:5173',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+    
+    // Em desenvolvimento, permitir todas
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // Em produção, verificar lista
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -44,12 +66,44 @@ const startServer = async () => {
     console.log('✅ Conectado ao MongoDB com sucesso!');
 
     // Importar rotas APÓS a conexão
-    const authRoutes = await import('./src/routes/auth.js');
-    const lessonRoutes = await import('./src/routes/lessons.js');
+    let authRoutes, lessonRoutes, aiRoutes;
+    
+    try {
+      authRoutes = await import('./src/routes/auth.js');
+      console.log('✅ Rotas de auth carregadas');
+    } catch (err) {
+      console.error('❌ Erro ao carregar auth routes:', err.message);
+    }
+    
+    try {
+      lessonRoutes = await import('./src/routes/lessons.js');
+      console.log('✅ Rotas de lessons carregadas');
+    } catch (err) {
+      console.error('❌ Erro ao carregar lesson routes:', err.message);
+    }
+    
+    try {
+      aiRoutes = await import('./src/routes/ai.js');
+      console.log('✅ Rotas de AI carregadas');
+    } catch (err) {
+      console.log('⚠️ Rotas de AI não encontradas (opcional)');
+    }
 
-    // Usar rotas
-    app.use('/api/auth', authRoutes.default);
-    app.use('/api/lessons', lessonRoutes.default);
+    // Usar rotas (apenas se existirem)
+    if (authRoutes?.default) {
+      app.use('/api/auth', authRoutes.default);
+      console.log('✅ /api/auth registrado');
+    }
+    
+    if (lessonRoutes?.default) {
+      app.use('/api/lessons', lessonRoutes.default);
+      console.log('✅ /api/lessons registrado');
+    }
+    
+    if (aiRoutes?.default) {
+      app.use('/api/ai', aiRoutes.default);
+      console.log('✅ /api/ai registrado');
+    }
 
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
