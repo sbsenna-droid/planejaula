@@ -2,3 +2,8 @@
 ".env" 
 "dist/" 
 ".DS_Store" 
+# Ignora tudo dentro da pasta services
+src/services/*
+
+# Mas NÃO ignora o api.js
+!src/services/api.js
