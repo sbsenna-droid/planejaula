@@ -48,21 +48,21 @@ const startServer = async () => {
     let authRoutes, lessonRoutes, aiRoutes;
     
     try {
-      authRoutes = await import('./routes/auth.js');
+      authRoutes = await import('./src/routes/auth.js');
       console.log('✅ Rotas de auth carregadas');
     } catch (err) {
       console.error('❌ Erro ao carregar auth routes:', err.message);
     }
     
     try {
-      lessonRoutes = await import('./routes/lessons.js');
+      lessonRoutes = await import('./src/routes/lessons.js');
       console.log('✅ Rotas de lessons carregadas');
     } catch (err) {
       console.error('❌ Erro ao carregar lesson routes:', err.message);
     }
     
     try {
-      aiRoutes = await import('./routes/ai.js');
+      aiRoutes = await import('./src/routes/ai.js');
       console.log('✅ Rotas de AI carregadas');
     } catch (err) {
       console.log('⚠️ Rotas de AI não encontradas (opcional)');
