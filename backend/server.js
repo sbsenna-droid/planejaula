@@ -9,37 +9,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware CORS - Aceita requisições de qualquer origem em desenvolvimento
+// Middleware CORS - Simples e direto
 app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir requisições sem origin (como mobile apps ou curl)
-    if (!origin) return callback(null, true);
-    
-    // Lista de origens permitidas
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:5174',
-      'http://127.0.0.1:5173',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
-    
-    // Em desenvolvimento, permitir todas
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    
-    // Em produção, verificar lista
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Preflight handler
+app.options('*', cors());
+
 app.use(express.json());
 
 // Rota de teste
