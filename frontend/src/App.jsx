@@ -5,20 +5,27 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function App() {
   const [auth, setAuth] = useState(null);
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ email: '', password: '', name: '', school: '' });
   const [lessons, setLessons] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [stats, setStats] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     if (token && user) {
       setAuth({ token, user: JSON.parse(user) });
+    } else {
+      // Pular direto pro dashboard sem login
+      setAuth({ 
+        token: 'test-token', 
+        user: { 
+          id: '1', 
+          name: 'Professor Teste', 
+          email: 'teste@example.com',
+          school: 'Escola de Teste'
+        } 
+      });
     }
   }, []);
 
@@ -47,34 +54,6 @@ function App() {
     }
   };
 
-  const handleAuth = async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const res = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setAuth({ token: data.token, user: data.user });
-      } else {
-        setError(data.message);
-      }
-    } catch (err) {
-      setError('Erro ao conectar com o servidor');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.clear();
     setAuth(null);
@@ -100,91 +79,6 @@ function App() {
       alert('Erro ao excluir');
     }
   };
-
-  // TELA DE LOGIN
-  if (!auth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-600 to-blue-600">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-          <div className="text-center mb-6">
-            <BookOpen className="w-20 h-20 mx-auto text-purple-600 mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900">PlanejAula</h1>
-            <p className="text-gray-600 mt-2">Planeje suas aulas com facilidade</p>
-          </div>
-
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-3 rounded-xl font-semibold text-base ${
-                isLogin ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              Entrar
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-3 rounded-xl font-semibold text-base ${
-                !isLogin ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              Cadastrar
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {!isLogin && (
-              <>
-                <input
-                  type="text"
-                  placeholder="Nome completo"
-                  className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-purple-500 outline-none"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Escola"
-                  className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-purple-500 outline-none"
-                  value={formData.school}
-                  onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                />
-              </>
-            )}
-            
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-purple-500 outline-none"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            
-            <input
-              type="password"
-              placeholder="Senha (mínimo 6 caracteres)"
-              className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-purple-500 outline-none"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-
-            {error && (
-              <div className="bg-red-50 border-2 border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              onClick={handleAuth}
-              disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 active:scale-95 transform transition"
-            >
-              {loading ? 'Carregando...' : (isLogin ? 'Entrar' : 'Cadastrar')}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // DASHBOARD MOBILE
   return (
