@@ -1,5 +1,9 @@
+import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { protect } from '../middleware/auth.js';
+
+const router = express.Router();
 
 // Gerar JWT Token
 const generateToken = (userId) => {
@@ -9,7 +13,7 @@ const generateToken = (userId) => {
 };
 
 // Registrar novo usuário
-export const register = async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const { name, email, password, school } = req.body;
 
@@ -51,10 +55,10 @@ export const register = async (req, res) => {
       error: error.message 
     });
   }
-};
+});
 
 // Login
-export const login = async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -97,10 +101,10 @@ export const login = async (req, res) => {
       error: error.message 
     });
   }
-};
+});
 
 // Obter perfil do usuário
-export const getProfile = async (req, res) => {
+router.get('/profile', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     
@@ -115,4 +119,6 @@ export const getProfile = async (req, res) => {
       error: error.message 
     });
   }
-};
+});
+
+export default router;
